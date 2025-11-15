@@ -215,6 +215,15 @@ const CITY_MAP = {
   "Almaty": "阿拉木图", "Nur-Sultan": "努尔苏丹", "Shymkent": "奇姆肯特", "Karaganda": "卡拉干达",
   "Bishkek": "比什凯克", "Osh": "奥什", "Jalal-Abad": "贾拉拉巴德", "Dushanbe": "杜尚别",
   "Khujand": "苦盏", "Ashgabat": "阿什哈巴德", "Turkmenabat": "土库曼纳巴德",
+  "The Dalles": "达尔斯", "The Hague": "海牙", "The Bronx": "布朗克斯",
+  "The Villages": "村庄", "The Woodlands": "林地", "The Colony": "殖民地",
+  "The Pas": "帕斯", "The Hills": "山区", "The Rocks": "岩石区",
+  "The Gap": "峡口", "The Plains": "平原", "The Valley": "山谷",
+  "Las Vegas": "拉斯维加斯", "Los Angeles": "洛杉矶", "San Francisco": "旧金山",
+  "San Diego": "圣迭戈", "San Jose": "圣何塞", "San Antonio": "圣安东尼奥",
+  "Santa Clara": "圣克拉拉", "Santa Monica": "圣莫尼卡", "El Paso": "埃尔帕索",
+  "La Paz": "拉巴斯", "Las Cruces": "拉斯克鲁塞斯", "Des Moines": "得梅因",
+  "Baton Rouge": "巴吞鲁日", "Boca Raton": "博卡拉顿", "Costa Mesa": "科斯塔梅萨",
 };
 function extractChineseName(text) {
   if (!text) return null;
