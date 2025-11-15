@@ -215,48 +215,50 @@ const CITY_MAP = {
   "Almaty": "阿拉木图", "Nur-Sultan": "努尔苏丹", "Shymkent": "奇姆肯特", "Karaganda": "卡拉干达",
   "Bishkek": "比什凯克", "Osh": "奥什", "Jalal-Abad": "贾拉拉巴德", "Dushanbe": "杜尚别",
   "Khujand": "苦盏", "Ashgabat": "阿什哈巴德", "Turkmenabat": "土库曼纳巴德",
+  "The Dalles": "达尔斯", "The Hague": "海牙", "The Bronx": "布朗克斯",
+  "The Villages": "村庄", "The Woodlands": "林地", "The Colony": "殖民地",
+  "The Pas": "帕斯", "The Hills": "山区", "The Rocks": "岩石区",
+  "The Gap": "峡口", "The Plains": "平原", "The Valley": "山谷",
+  "Las Vegas": "拉斯维加斯", "Los Angeles": "洛杉矶", "San Francisco": "旧金山",
+  "San Diego": "圣迭戈", "San Jose": "圣何塞", "San Antonio": "圣安东尼奥",
+  "Santa Clara": "圣克拉拉", "Santa Monica": "圣莫尼卡", "El Paso": "埃尔帕索",
+  "La Paz": "拉巴斯", "Las Cruces": "拉斯克鲁塞斯", "Des Moines": "得梅因",
+  "Baton Rouge": "巴吞鲁日", "Boca Raton": "博卡拉顿", "Costa Mesa": "科斯塔梅萨",
 };
 function extractChineseName(text) {
   if (!text) return null;
   const noisePatterns = [
-    /感谢.*?使用/gi, /如果.*?问题/gi, /请.*?反馈/gi,
-    /^翻译[:：]/gi, /^结果[:：]/gi, /^译文[:：]/gi,
-    /[\[\]【】]/g, /^\s*[-–—]\s*/, /\n/g
+    /感谢.*?使用/gi,
+    /如果.*?问题/gi,
+    /请.*?反馈/gi,
+    /^翻译[:：]/gi,
+    /^结果[:：]/gi,
+    /^译文[:：]/gi,
+    /[\[\]【】]/g,
+    /^\s*[-–—]\s*/,
+    /\n/g,
+    /[\u{1F300}-\u{1F9FF}]/gu, 
+    /[\u{2600}-\u{26FF}]/gu,  
+    /[\u{2700}-\u{27BF}]/gu,
+    /[☰☱☲☳☴☵☶☷►▼◄▲]/g,
+    /^[^\u4e00-\u9fa5]+/,
+    /[^\u4e00-\u9fa5]+$/
   ];
   let cleaned = text.trim();
   for (const pattern of noisePatterns) {
     cleaned = cleaned.replace(pattern, '');
   }
-  const chineseMatch = cleaned.match(/[\u4e00-\u9fa5\u3000-\u303f]+/g);
+  const chineseMatch = cleaned.match(/[\u4e00-\u9fa5]+/g);
   if (!chineseMatch) return null;
-  const longest = chineseMatch.reduce((a, b) => a.length > b.length ? a : b, '');
+  const longest = chineseMatch.reduce((a, b) => 
+    a.length > b.length ? a : b, ''
+  );
   if (longest.length >= 1 && longest.length <= 20) {
     return longest.trim();
   }
-  return null;
-}
-
-async function translateToChineseOnline(text) {
-  if (!text || typeof text !== 'string') return null;
-  const trimmed = text.trim();
-  if (!trimmed) return null;
-  if (/[\u4e00-\u9fa5]/.test(trimmed)) return trimmed;
   
-  try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${encodeURIComponent(trimmed)}`;
-    const res = await fetch(url, { 
-      cf: { cacheTtl: 86400 },
-      signal: AbortSignal.timeout(3000)
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data && data[0] && data[0][0] && data[0][0][0]) {
-      return extractChineseName(data[0][0][0]);
-    }
-  } catch {}
   return null;
 }
-
 function getClientIP(request, url) {
   const ip = url.searchParams.get("ip");
   if (ip && /^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) return ip;
@@ -266,9 +268,7 @@ function getClientIP(request, url) {
     "1.1.1.1"
   );
 }
-
 async function getGeo(ip) {
-  // 优先使用 ip-api.com（支持 hosting 字段）
   try {
     const res = await fetch(
       `http://ip-api.com/json/${ip}?fields=status,country,countryCode,city,regionName,isp,org,as,hosting,query`,
@@ -286,7 +286,6 @@ async function getGeo(ip) {
     if (res.ok) {
       const data = await res.json();
       if (data && data.country) {
-        // 统一字段名
         return {
           country: data.country_name || data.country,
           countryCode: data.country_code || data.country,
@@ -305,7 +304,6 @@ async function getGeo(ip) {
 function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
   const flagEmoji = countryCN.match(/[\u{1F1E6}-\u{1F1FF}]{2}/gu)?.[0] || '🌍';
   const countryName = countryCN.replace(/[\u{1F1E6}-\u{1F1FF}]{2}\s*/gu, '').trim();
-  
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -320,7 +318,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       padding: 0;
       box-sizing: border-box;
     }
-    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 
                    'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -332,7 +329,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       color: white;
       padding: 20px;
     }
-    
     .container {
       text-align: center;
       background: rgba(255, 255, 255, 0.1);
@@ -344,7 +340,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       max-width: 500px;
       width: 100%;
     }
-    
     .flag {
       font-size: 100px;
       line-height: 1;
@@ -352,7 +347,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       font-family: 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji';
       filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
     }
-    
     .info-line {
       font-size: 20px;
       font-weight: 600;
@@ -365,7 +359,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       letter-spacing: 0.5px;
       line-height: 1.6;
     }
-    
     .info-line .label {
       font-size: 14px;
       opacity: 0.8;
@@ -373,12 +366,10 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       margin-bottom: 5px;
       font-weight: 400;
     }
-    
     .info-line .value {
       font-family: 'Courier New', monospace;
       font-weight: 700;
     }
-    
     .network-badge {
       display: inline-block;
       padding: 4px 12px;
@@ -388,7 +379,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       margin-left: 10px;
       font-weight: 500;
     }
-    
     .network-badge.hosting {
       background: rgba(255, 193, 7, 0.3);
     }
@@ -396,7 +386,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
     .network-badge.isp {
       background: rgba(76, 175, 80, 0.3);
     }
-    
     .tip {
       margin-top: 30px;
       padding-top: 25px;
@@ -404,7 +393,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
       font-size: 14px;
       opacity: 0.8;
     }
-    
     @media (max-width: 600px) {
       .container {
         padding: 35px 30px;
@@ -425,28 +413,23 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
 <body>
   <div class="container">
     <div class="flag">${flagEmoji}</div>
-    
     <div class="info-line">
       <span class="label">IP 地址</span>
       <span class="value">${ip}</span>
     </div>
-    
     <div class="info-line">
       <span class="label">网络类型</span>
       <span class="value">${networkType}</span>
       <span class="network-badge ${networkType === 'Hosting' ? 'hosting' : 'isp'}">${networkType === 'Hosting' ? '🖥️ 数据中心' : '🏠 家庭/企业网络'}</span>
     </div>
-    
     <div class="info-line">
       <span class="label">国家 / 地区</span>
       <span class="value">${countryName}${cityCN ? ' · ' + cityCN : ''}</span>
     </div>
-    
     ${isp ? `<div class="info-line">
       <span class="label">网络运营商</span>
       <span class="value" style="font-size: 16px;">${isp}</span>
     </div>` : ''}
-    
     <div class="tip">
       💡 API调用地址: https://域名/?ip=你的ip
     </div>
@@ -454,7 +437,6 @@ function generateHTML(countryCN, cityCN, ip, countryCode, networkType, isp) {
 </body>
 </html>`;
 }
-
 // ======= 主函数 =======
 export default {
   async fetch(request) {
